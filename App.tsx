@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Component, ErrorInfo } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth, signInWithGoogle, logout } from './services/firebase';
 import { createChatSession, sendMessageStream } from './services/geminiService';
@@ -8,10 +8,51 @@ import { Sidebar } from './components/Sidebar';
 import { ChatMessage } from './components/ChatMessage';
 import { Message, Role, ChatSession, ModelType } from './types';
 import { ATTRIBUTION_TEXT } from './constants';
-import { Menu, Send, StopCircle, Zap, Sparkles } from 'lucide-react';
+import { Menu, Send, StopCircle, Zap, Sparkles, AlertTriangle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
-const App: React.FC = () => {
+// Error Boundary Component to catch rendering errors
+class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-[#343541] text-white flex flex-col items-center justify-center p-4">
+          <AlertTriangle className="w-16 h-16 text-red-500 mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Something went wrong</h1>
+          <p className="text-gray-400 mb-4 text-center max-w-md">
+            The application encountered an error. Please try refreshing the page.
+          </p>
+          <div className="bg-black/30 p-4 rounded text-xs font-mono text-red-300 max-w-full overflow-auto">
+            {this.state.error?.toString()}
+          </div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-6 px-4 py-2 bg-emerald-600 rounded hover:bg-emerald-700 transition-colors"
+          >
+            Reload Application
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+const AppContent: React.FC = () => {
   // Auth State
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -244,15 +285,7 @@ const App: React.FC = () => {
         onSelectSession={(id) => {
             setCurrentSessionId(id);
             setSidebarOpen(false);
-            // We need to re-instantiate chat context or restore it. 
-            // For simplicity in this demo, we create a new context with history 
-            // but the `google-genai` SDK is stateful.
-            // A production app would reconstruct history using `history` param in `ai.chats.create`.
-            // For now, we just reset the chat instance to keep it simple, knowing context might be lost on switch.
             chatInstanceRef.current = createChatSession(selectedModel);
-            // ideally we would re-populate history here:
-            // const session = sessions.find(s => s.id === id);
-            // chatInstanceRef.current = ai.chats.create({ history: convertToGeminiHistory(session.messages) ... })
         }}
         onDeleteSession={handleDeleteSession}
         onLogout={handleLogout}
@@ -360,6 +393,14 @@ const App: React.FC = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
   );
 };
 

@@ -5,7 +5,17 @@ import { FIREBASE_CONFIG } from "../constants";
 
 // Initialize Firebase
 const app = initializeApp(FIREBASE_CONFIG);
-const analytics = getAnalytics(app);
+
+// Initialize Analytics conditionally to avoid errors in environments where window is undefined or blocked
+let analytics = null;
+try {
+  if (typeof window !== 'undefined') {
+    analytics = getAnalytics(app);
+  }
+} catch (e) {
+  console.warn("Firebase Analytics failed to initialize:", e);
+}
+
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 

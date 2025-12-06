@@ -3,7 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>AkinAI Chat</title>
+    <title>AkinAI - Powered by Gemini</title>
+    <script>
+      // Polyfill for process.env to avoid ReferenceError in browser
+      window.process = window.process || { env: {} };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');

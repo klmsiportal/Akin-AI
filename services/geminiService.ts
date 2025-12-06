@@ -2,12 +2,19 @@ import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
 import { ModelType } from "../types";
 import { DEFAULT_SYSTEM_INSTRUCTION } from "../constants";
 
-// The API key must be obtained exclusively from process.env.API_KEY
-// The user is responsible for ensuring this environment variable is set in Vercel or their environment.
-const apiKey = process.env.API_KEY || ''; 
+// Safely access process.env.API_KEY to avoid ReferenceError in some browser environments
+const getApiKey = () => {
+  try {
+    return process.env.API_KEY || '';
+  } catch (e) {
+    console.warn("process.env.API_KEY is not accessible.");
+    return '';
+  }
+};
 
-// We initialize the client inside functions or lazily to avoid issues if the key is missing at import time (though it should be there).
-// However, for best practice per system prompt:
+const apiKey = getApiKey();
+
+// Initialize the client. The key is required.
 const ai = new GoogleGenAI({ apiKey });
 
 export const createChatSession = (model: ModelType): Chat => {
