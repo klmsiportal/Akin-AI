@@ -1,0 +1,5 @@
+{
+  "name": "AkinAI Chat",
+  "description": "A state-of-the-art AI chat interface powered by Gemini, created by Akin S. Sokpah from Liberia. Features Firebase Google Auth and real-time streaming responses.",
+  "requestFramePermissions": []
+}
